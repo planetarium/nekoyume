@@ -113,7 +113,7 @@ class Node(db.Model):
                 datetime.timedelta(minutes=60 * 3)
             ).order_by(Node.last_connected_at.desc()).limit(2500)
             if Node.query.count() == 0:
-                recent_nodes = []   # cls(url='http://seed.nekoyu.me')]
+                recent_nodes = [cls(url='http://seed.nekoyu.me')]
         else:
             recent_nodes = [node]
 
