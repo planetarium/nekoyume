@@ -113,7 +113,7 @@ class Node(db.Model):
                 datetime.timedelta(minutes=60 * 3)
             ).order_by(Node.last_connected_at.desc()).limit(2500)
             if Node.query.count() == 0:
-                recent_nodes = [cls(url='http://seed.nekoyu.me')]
+                recent_nodes = []   # cls(url='http://seed.nekoyu.me')]
         else:
             recent_nodes = [node]
 
@@ -694,19 +694,23 @@ class HackAndSlash(Move):
             raise InvalidMoveError
 
         # TODO Load other users avatar
-        simul = Simulator(self.make_random_generator())
+        rand = self.make_random_generator()
+        simul = Simulator(rand, avatar.zone)
         my_character = CharacterFactory.create_from_avatar(
             avatar, self.details)
         simul.characters.append(my_character)
-        simul.characters.append(CharacterFactory.create_monster('slime'))
+        appear_monsters = Tables.get_monster_appear_list(avatar.zone)
+        for i in range(3):
+            simul.characters.append(
+                CharacterFactory.create_monster(appear_monsters.select(rand)))
         simul.simulate()
 
         my_character.to_avatar(avatar)
 
         return (avatar, dict(
                     type='hack_and_slash',
-                    result=battle.result,
-                    battle_status=battle.logger.logs,
+                    result=simul.result,
+                    battle_status=simul.logger.logs,
                 ))
 
 
@@ -740,6 +744,7 @@ class CreateNovice(Move):
             gold=gold,
             class_='novice',
             level=1,
+            zone=list(Tables.zone.keys())[0],
             gravatar_hash=self.details.get('gravatar_hash', 'HASH'),
         )
 
@@ -1078,6 +1083,7 @@ class Avatar:
     constitution: int = 0
     luck: int = 0
     items: List[Item] = field(default_factory=list)
+    zone: str = ''
     gravatar_hash: str = 'HASH'
 
     @classmethod
