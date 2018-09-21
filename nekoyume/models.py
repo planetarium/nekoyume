@@ -697,13 +697,15 @@ class HackAndSlash(Move):
         # TODO Load other users avatar
         rand = self.make_random_generator()
         simul = Simulator(rand, avatar.zone)
-        my_character = CharacterFactory.create_from_avatar(
+
+        factory = CharacterFactory()
+        my_character = factory.create_from_avatar(
             avatar, self.details)
         simul.characters.append(my_character)
         appear_monsters = Tables.get_monster_appear_list(avatar.zone)
         for i in range(NUM_HACK_AND_SLASH_MONSTERS):
             simul.characters.append(
-                CharacterFactory.create_monster(appear_monsters.select(rand)))
+                factory.create_monster(appear_monsters.select(rand)))
         simul.simulate()
 
         my_character.to_avatar(avatar)
@@ -711,7 +713,7 @@ class HackAndSlash(Move):
         return (avatar, dict(
                     type='hack_and_slash',
                     result=simul.result,
-                    battle_status=simul.logger.logs,
+                    battle_logger=simul.logger,
                 ))
 
 
@@ -749,8 +751,9 @@ class CreateNovice(Move):
             gravatar_hash=self.details.get('gravatar_hash', 'HASH'),
         )
 
-        character = CharacterFactory.create_from_avatar(avatar, self.details)
-        character.to_avatar(avatar, hp_max=True)
+        factory = CharacterFactory()
+        character = factory.create_from_avatar(avatar, self.details)
+        character.to_avatar(avatar, hp_recover=True)
 
         return (avatar, dict(
             type='create_novice',
